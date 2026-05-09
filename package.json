@@ -13,7 +13,6 @@
     "dev:worker": "npm --workspace worker run dev",
     "deploy:worker": "npm --workspace worker run deploy",
     "dev:dashboard": "npm --workspace dashboard run dev",
-    "deploy:dashboard": "npm --workspace dashboard run deploy",
     "typecheck": "npm --workspaces --if-present run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
