@@ -23,7 +23,13 @@ Ring0 cluster. If you find a similar prior signature, reuse its category and
 hash so we cluster instead of fragmenting.
 
 When you are confident, call submit_signature — that is the only way to
-return your result.
+return your result. Always include 2–3 short, concrete proposedActions for
+the user. Ring0 operates in Singapore — recommend Singapore-based reporting
+channels only. Examples: "Block this number on your phone", "Report via the
+ScamShield app", "Call the Anti-Scam Helpline 1800-722-6688", "File a report
+at scamalert.sg", "Warn family members about this script". Do NOT recommend
+US/FTC/IC3 channels. Keep each action under 80 characters and do not invent
+phone numbers, addresses, or codes beyond the verified Singapore ones above.
 `.trim();
 
 const TOOLS = [
@@ -60,8 +66,9 @@ const TOOLS = [
         targetDemographic: { type: ["string", "null"] },
         dangerScore: { type: "number", minimum: 0, maximum: 10 },
         summary: { type: "string" },
+        proposedActions: { type: "array", items: { type: "string" } },
       },
-      required: ["scamCategory", "tactics", "dangerScore", "summary"],
+      required: ["scamCategory", "tactics", "dangerScore", "summary", "proposedActions"],
     },
   },
 ];
@@ -112,6 +119,7 @@ export async function extractSignature(
     targetDemographic: null,
     dangerScore: 0,
     summary: "Agent did not finalize a signature.",
+    proposedActions: [],
   });
 }
 
@@ -156,6 +164,7 @@ function finalizeSignature(args: Partial<ScamSignature>): ScamSignature {
     targetDemographic: args.targetDemographic ?? null,
     dangerScore: clamp(Number(args.dangerScore ?? 0), 0, 10),
     summary: args.summary ?? "",
+    proposedActions: (args.proposedActions ?? []).slice(0, 3),
   };
 }
 

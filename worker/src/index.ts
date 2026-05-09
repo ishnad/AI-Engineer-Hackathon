@@ -27,6 +27,12 @@ export interface Env {
   TWILIO_AUTH_TOKEN: string;
   CONVEX_URL: string;
   PUBLIC_WORKER_URL: string;
+  // Telegram bot for post-call summary DMs (single-user demo).
+  TELEGRAM_BOT_TOKEN?: string;
+  TELEGRAM_CHAT_ID?: string;
+  // Public URL of the Vercel dashboard, used to link the Telegram summary
+  // to the per-call transcript page (e.g. https://ring0.vercel.app).
+  DASHBOARD_URL?: string;
   // Set to "1" to dry-run the meta-agent (logs the persona-author prompt
   // instead of calling GPT-5.5).
   RING0_META_DRYRUN?: string;
@@ -48,7 +54,8 @@ export default {
         forwardedFrom: form?.get("ForwardedFrom")?.toString() || undefined,
       });
       const wsUrl = env.PUBLIC_WORKER_URL.replace(/^http/, "ws") + "/twilio/stream";
-      return new Response(incomingTwiml(wsUrl), {
+      const fromPhone = form?.get("From")?.toString() || undefined;
+      return new Response(incomingTwiml(wsUrl, fromPhone), {
         headers: { "content-type": "text/xml" },
       });
     }

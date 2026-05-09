@@ -16,6 +16,8 @@ export default defineSchema({
     signatureHash: v.optional(v.string()),
     signatureVectorId: v.optional(v.string()),
     posterImageUrl: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    proposedActions: v.optional(v.array(v.string())),
   }).index("by_callSid", ["callSid"]),
 
   personas: defineTable({

@@ -92,6 +92,8 @@ export const setSignature = mutation({
     scamCategory: v.string(),
     dangerScore: v.number(),
     signatureHash: v.string(),
+    summary: v.string(),
+    proposedActions: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     const row = await ctx.db
@@ -103,6 +105,8 @@ export const setSignature = mutation({
       scamCategory: args.scamCategory,
       dangerScore: args.dangerScore,
       signatureHash: args.signatureHash,
+      summary: args.summary,
+      proposedActions: args.proposedActions,
     });
     return row._id;
   },
@@ -147,6 +151,18 @@ export const removeOlderThan = mutation({
       }
     }
     return removed;
+  },
+});
+
+// Single call by Twilio CallSid — used by the per-call transcript page that
+// the Telegram message links to.
+export const byCallSid = query({
+  args: { callSid: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("calls")
+      .withIndex("by_callSid", (q) => q.eq("callSid", args.callSid))
+      .unique();
   },
 });
 

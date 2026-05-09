@@ -69,6 +69,8 @@ http.route({
         claimedOrg: string | null;
         tactics: string[];
         dangerScore: number;
+        summary: string;
+        proposedActions: string[];
       };
     };
     await ctx.runMutation(api.calls.setSignature, {
@@ -76,6 +78,8 @@ http.route({
       scamCategory: body.signature.scamCategory,
       dangerScore: body.signature.dangerScore,
       signatureHash: body.signature.signatureHash,
+      summary: body.signature.summary,
+      proposedActions: body.signature.proposedActions,
     });
     await ctx.runMutation(api.signatures.upsert, {
       signatureHash: body.signature.signatureHash,

@@ -39,6 +39,10 @@ index_name = "ring0-signatures"
 
 [vars]
 GEMINI_LIVE_MODEL = "gemini-3.1-flash-live-preview"
+# Public dashboard URL — embedded in the Telegram summary as a link to the
+# per-call transcript page. Override per environment.
+DASHBOARD_URL = "https://ring0.vercel.app"
 
 # Secrets (set via `wrangler secret put`):
-#   GEMINI_API_KEY, TWILIO_AUTH_TOKEN, OPENAI_API_KEY, CONVEX_URL
+#   GEMINI_API_KEY, TWILIO_AUTH_TOKEN, OPENAI_API_KEY, CONVEX_URL,
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID

@@ -24,7 +24,11 @@ interface VoiceClient {
 
 interface TwilioMessage {
   event: "connected" | "start" | "media" | "stop" | "mark";
-  start?: { streamSid: string; callSid: string };
+  start?: {
+    streamSid: string;
+    callSid: string;
+    customParameters?: Record<string, string>;
+  };
   media?: { payload: string; track: string; timestamp: string };
   stop?: { callSid: string };
 }
@@ -35,6 +39,7 @@ export class CallSession implements DurableObject {
   private voiceProvider: VoiceProvider = "gemini";
   private streamSid: string | null = null;
   private callSid: string | null = null;
+  private fromPhone: string | null = null;
   private startedAt = 0;
   private transcript: { role: "user" | "agent"; text: string; t: number }[] = [];
   private rawAudio: Uint8Array[] = [];
@@ -45,6 +50,16 @@ export class CallSession implements DurableObject {
   constructor(private state: DurableObjectState, private env: Env) {}
 
   async fetch(request: Request): Promise<Response> {
+    // Preferred channel for the caller's number: URL query param on the
+    // stream URL (Twilio preserves URLs verbatim). customParameters from
+    // the start event remains as a fallback below.
+    try {
+      const qFrom = new URL(request.url).searchParams.get("from");
+      if (qFrom) this.fromPhone = qFrom;
+    } catch {
+      // Bad URL — ignore; we'll still try customParameters.
+    }
+
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
     server.accept();
@@ -69,8 +84,13 @@ export class CallSession implements DurableObject {
       case "start": {
         this.streamSid = msg.start!.streamSid;
         this.callSid = msg.start!.callSid;
+        // Only adopt customParameters value if URL query didn't already give
+        // us one — URL query is the more reliable channel.
+        if (!this.fromPhone) {
+          this.fromPhone = msg.start!.customParameters?.from ?? null;
+        }
         this.startedAt = Date.now();
-        logInfo({ callSid: this.callSid, step: "twilio.start", streamSid: this.streamSid, personaId: this.personaId });
+        logInfo({ callSid: this.callSid, step: "twilio.start", streamSid: this.streamSid, personaId: this.personaId, from: this.fromPhone ?? undefined });
         // Tell Convex the call is live — fire-and-forget so we never block
         // the audio path on a slow Convex round-trip.
         this.state.waitUntil(this.notifyCallStarted());
@@ -268,6 +288,7 @@ export class CallSession implements DurableObject {
         durationSec,
         transcript: this.transcript,
         audioKey: `raw/${callSid}.ulaw`,
+        fromPhone: this.fromPhone ?? undefined,
       };
       // No Cloudflare Queue (Workers Paid only) — run the same consumer
       // inline. Synthetic single-message batch keeps the consumer's signature

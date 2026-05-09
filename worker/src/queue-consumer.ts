@@ -19,6 +19,7 @@ import type { PostCallJob, ScamSignature } from "@ring0/pipeline";
 import { ConvexClient } from "./convex-client";
 import type { Env } from "./index";
 import { logError, logInfo } from "./logger";
+import { sendTelegramSummary } from "./telegram";
 
 export async function handlePostCallBatch(
   batch: MessageBatch<PostCallJob>,
@@ -73,6 +74,9 @@ async function handleOne(job: PostCallJob, env: Env, convex: ConvexClient): Prom
   await Promise.allSettled([
     embedSignature(env, signature),
     convex.post("/ring0/signature", { callSid, signature }),
+    sendTelegramSummary(env, job, signature).catch((err) =>
+      logError({ callSid, step: "telegram.err" }, err),
+    ),
   ]);
   stage("signature.embedded");
 

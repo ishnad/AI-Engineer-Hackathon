@@ -5,6 +5,9 @@ export interface PostCallJob {
   durationSec: number;
   audioKey: string;
   transcript: TranscriptTurn[];
+  // Caller's phone number (Twilio `From`). Optional — may be absent on
+  // legacy/test paths or anonymous callers.
+  fromPhone?: string;
 }
 
 export interface TranscriptTurn {
@@ -22,6 +25,7 @@ export interface ScamSignature {
   targetDemographic: string | null;
   dangerScore: number; // 0–10
   summary: string;
+  proposedActions: string[];
 }
 
 export interface OpenAIOptions {
