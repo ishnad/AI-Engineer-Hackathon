@@ -1,0 +1,5 @@
+node_modules
+dashboard/.next
+dashboard/convex/_generated
+package-lock.json
+**/*.md

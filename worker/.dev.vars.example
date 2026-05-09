@@ -1,0 +1,22 @@
+# Copy to worker/.dev.vars to run `wrangler dev` against the local mock harness
+# (see scripts/mock/all.mjs).  Real keys go straight into worker/.dev.vars.
+
+# Mock Gemini Live (ws://), OpenAI Realtime (ws://), and OpenAI HTTP (http://)
+# endpoints — the worker falls back to the real public URLs when these are unset.
+GEMINI_LIVE_URL = "ws://127.0.0.1:8765"
+OPENAI_REALTIME_URL = "ws://127.0.0.1:8767"
+OPENAI_BASE_URL = "http://127.0.0.1:8766"
+
+# Anything non-empty works against the mocks.
+GEMINI_API_KEY = "mock-gemini-key"
+GEMINI_LIVE_MODEL = "gemini-flash-3.1-live"
+OPENAI_REALTIME_MODEL = "gpt-realtime-2"
+OPENAI_API_KEY = "mock-openai-key"
+TWILIO_AUTH_TOKEN = "mock-twilio-token"
+
+# Default voice provider is Gemini. Uncomment to A/B against the OpenAI
+# Realtime fallback (uses OPENAI_REALTIME_URL above).
+# VOICE_PROVIDER = "openai-realtime"
+
+CONVEX_URL = "http://127.0.0.1:8187"
+PUBLIC_WORKER_URL = "http://127.0.0.1:8787"

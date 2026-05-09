@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "Bash(npm --workspace pipeline run typecheck)",
+      "Bash(npm --workspace worker run typecheck)",
+      "Bash(node scripts/replay-call.mjs --list)",
+      "Bash(node -e ' *)",
+      "Bash(npx vitest *)",
+      "Bash(npx prettier *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(npm --workspace dashboard ls convex)",
+      "Bash(npx wrangler *)",
+      "Bash(ls \"c:/Users/mdani/.claude/projects/c--Users-mdani-OneDrive-Desktop-SIM-UNI-STUFF-AI-Engineer-Hackathon/memory/\" 2>&1 | head -50)",
+      "Read(//c/Users/mdani/.claude/projects/c--Users-mdani-OneDrive-Desktop-SIM-UNI-STUFF-AI-Engineer-Hackathon/memory/**)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/twilio/incoming -X POST -d 'CallSid=test')",
+      "Bash(MOCK_CALL_MS=8000 WORKER_WS_URL=ws://127.0.0.1:8787/twilio/stream node scripts/mock/twilio-caller.mjs)",
+      "Bash(tee /tmp/caller.log)",
+      "Read(//tmp/**)",
+      "Bash(find \"/c/Users/mdani/OneDrive/Desktop/SIM UNI STUFF/AI-Engineer-Hackathon/\" -maxdepth 3 -name '.env*' 2>&1; echo ---; find \"/c/Users/mdani/OneDrive/Desktop/SIM UNI STUFF/AI-Engineer-Hackathon/\" -maxdepth 3 -name 'convex.json' 2>&1; echo ---WhomeConvex---; ls \"/c/Users/mdani/.convex/\" 2>&1 | head -10)",
+      "Read(//c/Users/mdani/.convex//**)",
+      "Bash(npx convex *)",
+      "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' https://ring0-worker.mdanishboy.workers.dev/health)",
+      "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' -X POST https://ring0-worker.mdanishboy.workers.dev/twilio/incoming -d 'CallSid=CA-debug&From=%2B6500000000&To=%2B1000')"
+    ]
+  }
+}

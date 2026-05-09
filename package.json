@@ -1,0 +1,41 @@
+{
+  "name": "ring0",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ring0 — AI cold-call killer. Hackathon MVP.",
+  "workspaces": [
+    "worker",
+    "personas",
+    "dashboard",
+    "pipeline"
+  ],
+  "scripts": {
+    "dev:worker": "npm --workspace worker run dev",
+    "deploy:worker": "npm --workspace worker run deploy",
+    "dev:dashboard": "npm --workspace dashboard run dev",
+    "deploy:dashboard": "npm --workspace dashboard run deploy",
+    "typecheck": "npm --workspaces --if-present run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "demo:replay": "node scripts/replay-call.mjs",
+    "mock:gemini": "node scripts/mock/gemini-live.mjs",
+    "mock:realtime": "node scripts/mock/openai-realtime.mjs",
+    "mock:openai": "node scripts/mock/openai.mjs",
+    "mock:caller": "node scripts/mock/twilio-caller.mjs",
+    "mock:all": "node scripts/mock/all.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^2.1.0",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

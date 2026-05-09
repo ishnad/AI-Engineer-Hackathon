@@ -1,0 +1,44 @@
+name = "ring0-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Per-call state lives in a Durable Object so audio buffers + Gemini WS survive
+# the lifetime of a single Twilio Media Stream.
+[[durable_objects.bindings]]
+name = "CALL_SESSION"
+class_name = "CallSession"
+
+[[migrations]]
+tag = "v1"
+# SQLite-backed DOs are required on Workers Free. We don't use DO storage
+# (state is in-memory + R2), so SQLite vs the legacy class is a no-op for us.
+new_sqlite_classes = ["CallSession"]
+
+# Raw audio for the post-call extraction pipeline.
+[[r2_buckets]]
+binding = "CALL_AUDIO"
+bucket_name = "ring0-call-audio"
+
+# Persona registry — system prompts live here so the meta-agent can rewrite
+# them without redeploying the Worker.
+[[kv_namespaces]]
+binding = "PERSONAS"
+id = "0f4cfef542534ff69165e049f44bd2b1"
+
+# Scam-signature embeddings (post-call clustering / dedupe).
+[[vectorize]]
+binding = "SIGNATURES"
+index_name = "ring0-signatures"
+
+# Post-call work runs inline from the Durable Object via state.waitUntil()
+# instead of a Cloudflare Queue (Queues require Workers Paid). Trade-off: no
+# automatic retry / DLQ — a failed signature is lost for that call. Re-enable
+# by adding [[queues.producers]] + [[queues.consumers]] and setting up
+# Workers Paid; the consumer code path (handlePostCallBatch) is unchanged.
+
+[vars]
+GEMINI_LIVE_MODEL = "gemini-3.1-flash-live-preview"
+
+# Secrets (set via `wrangler secret put`):
+#   GEMINI_API_KEY, TWILIO_AUTH_TOKEN, OPENAI_API_KEY, CONVEX_URL
