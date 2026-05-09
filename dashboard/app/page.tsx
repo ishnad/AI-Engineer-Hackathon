@@ -1,6 +1,7 @@
 import { LearningCurve } from "../components/LearningCurve";
 import { LiveTranscripts } from "../components/LiveTranscripts";
 import { MostWanted } from "../components/MostWanted";
+import { PersonaSwap } from "../components/PersonaSwap";
 import { ProposedPersonas } from "../components/ProposedPersonas";
 import { SignatureLeaderboard } from "../components/SignatureLeaderboard";
 import { StatsCounters } from "../components/StatsCounters";
@@ -23,6 +24,7 @@ export default function HomePage() {
       <LearningCurve />
       <SignatureLeaderboard />
       <ProposedPersonas />
+      <PersonaSwap />
     </main>
   );
 }

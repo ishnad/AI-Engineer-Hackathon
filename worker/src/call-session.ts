@@ -40,6 +40,7 @@ export class CallSession implements DurableObject {
   private rawAudio: Uint8Array[] = [];
   private firstAudioLogged = false;
   private firstTranscriptLogged = false;
+  private transcriptFlushTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private state: DurableObjectState, private env: Env) {}
 
@@ -93,6 +94,35 @@ export class CallSession implements DurableObject {
     }
   }
 
+  // Throttle: at most one push per 300ms. Each new fragment that arrives
+  // while a flush is pending is included in that pending flush, so the
+  // dashboard sees the full running transcript within ~300ms of any word.
+  private scheduleTranscriptFlush(): void {
+    if (this.transcriptFlushTimer) return;
+    if (!this.callSid) return;
+    this.transcriptFlushTimer = setTimeout(() => {
+      this.transcriptFlushTimer = null;
+      if (!this.callSid) return;
+      this.state.waitUntil(this.pushTranscript());
+    }, 300);
+  }
+
+  private async pushTranscript(): Promise<void> {
+    if (!this.callSid) return;
+    const callSid = this.callSid;
+    const turns = this.transcript.slice();
+    const t0 = Date.now();
+    try {
+      await new ConvexClient(this.env.CONVEX_URL).post("/ring0/call/transcript", {
+        callSid,
+        transcript: turns,
+      });
+      logInfo({ callSid, step: "convex.transcript.ok", stepMs: Date.now() - t0, turns: turns.length });
+    } catch (err) {
+      logError({ callSid, step: "convex.transcript.err", stepMs: Date.now() - t0 }, err);
+    }
+  }
+
   private async notifyCallStarted(): Promise<void> {
     if (!this.callSid) return;
     const callSid = this.callSid;
@@ -132,6 +162,13 @@ export class CallSession implements DurableObject {
         this.firstTranscriptLogged = true;
         logInfo({ callSid: this.callSid ?? undefined, step: `${tag}.firstTranscript`, totalMs: t, role });
       }
+      this.scheduleTranscriptFlush();
+    };
+    const onInterrupted = () => {
+      // Caller barged in — drop everything Twilio has buffered for playback
+      // so Ring0 stops mid-sentence instead of finishing its queued audio.
+      logInfo({ callSid: this.callSid ?? undefined, step: `${tag}.interrupted`, totalMs: Date.now() - this.startedAt });
+      this.clearTwilioAudio();
     };
     const onClose = () => {
       // If the upstream voice drops mid-call we just hang up — the post-call
@@ -148,6 +185,7 @@ export class CallSession implements DurableObject {
           systemPrompt: persona.systemPrompt,
           onAudio,
           onTranscript,
+          onInterrupted,
           onClose,
         })
       : new GeminiLive({
@@ -157,6 +195,7 @@ export class CallSession implements DurableObject {
           systemPrompt: persona.systemPrompt,
           onAudio,
           onTranscript,
+          onInterrupted,
           onClose,
         });
 
@@ -168,6 +207,13 @@ export class CallSession implements DurableObject {
       logError({ callSid: this.callSid ?? undefined, step: `${tag}.connect.err`, stepMs: Date.now() - t0 }, err);
       this.twilio?.close();
     }
+  }
+
+  private clearTwilioAudio(): void {
+    if (!this.twilio || !this.streamSid) return;
+    this.twilio.send(
+      JSON.stringify({ event: "clear", streamSid: this.streamSid }),
+    );
   }
 
   private sendToTwilio(pcm: ArrayBuffer): void {
@@ -188,6 +234,11 @@ export class CallSession implements DurableObject {
     if (!this.callSid) return;
     const callSid = this.callSid;
     this.callSid = null;
+
+    if (this.transcriptFlushTimer) {
+      clearTimeout(this.transcriptFlushTimer);
+      this.transcriptFlushTimer = null;
+    }
 
     this.voice?.close();
     const durationSec = Math.round((Date.now() - this.startedAt) / 1000);

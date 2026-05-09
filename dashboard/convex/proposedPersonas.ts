@@ -39,3 +39,46 @@ export const recent = query({
     return rows.sort((a, b) => b.proposedAt - a.proposedAt).slice(0, limit);
   },
 });
+
+// Approve a proposed persona — copy it into the live personas table and
+// remove it from the proposed list. personaId is set to the slug so future
+// upserts on the same cluster will collide with the live row instead of
+// re-creating it as a proposal.
+export const approve = mutation({
+  args: { id: v.id("proposedPersonas") },
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.id);
+    if (!row) return null;
+    const existing = await ctx.db
+      .query("personas")
+      .withIndex("by_personaId", (q) => q.eq("personaId", row.slug))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        systemPrompt: row.systemPrompt,
+        version: existing.version + 1,
+      });
+    } else {
+      await ctx.db.insert("personas", {
+        personaId: row.slug,
+        name: row.slug,
+        systemPrompt: row.systemPrompt,
+        version: 1,
+        avgDurationSec: 0,
+        callsHandled: 0,
+      });
+    }
+    await ctx.db.delete(args.id);
+    return row.slug;
+  },
+});
+
+// Deny / dismiss a proposed persona — drops it from the list. The next time
+// the meta-agent sees the same cluster it will simply re-propose.
+export const deny = mutation({
+  args: { id: v.id("proposedPersonas") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return null;
+  },
+});

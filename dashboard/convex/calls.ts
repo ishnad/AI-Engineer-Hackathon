@@ -65,6 +65,27 @@ export const setEnded = mutation({
   },
 });
 
+// Streamed mid-call: the worker pushes the running transcript every few
+// hundred ms so the dashboard's live-transcript card updates in real time
+// instead of only at hangup.
+export const appendTranscript = mutation({
+  args: {
+    callSid: v.string(),
+    transcript: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("calls")
+      .withIndex("by_callSid", (q) => q.eq("callSid", args.callSid))
+      .unique();
+    if (!row) return null;
+    // Don't clobber a final transcript already written by setEnded.
+    if (row.endedAt) return row._id;
+    await ctx.db.patch(row._id, { transcript: args.transcript });
+    return row._id;
+  },
+});
+
 export const setSignature = mutation({
   args: {
     callSid: v.string(),
@@ -97,6 +118,35 @@ export const setPoster = mutation({
     if (!row) return null;
     await ctx.db.patch(row._id, { posterImageUrl: args.posterImageUrl });
     return row._id;
+  },
+});
+
+// Drop a single call's record so it disappears from Live transcripts and
+// Most Wanted. liveStats counters are intentionally left alone — they're
+// lifetime totals, not a sum of currently-stored rows.
+export const remove = mutation({
+  args: { id: v.id("calls") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return null;
+  },
+});
+
+// Bulk-clear every call older than `olderThanMs` ago. Returns the count
+// removed so the dashboard can show a confirmation toast.
+export const removeOlderThan = mutation({
+  args: { olderThanMs: v.number() },
+  handler: async (ctx, args) => {
+    const cutoff = Date.now() - args.olderThanMs;
+    const rows = await ctx.db.query("calls").collect();
+    let removed = 0;
+    for (const row of rows) {
+      if (row.startedAt < cutoff) {
+        await ctx.db.delete(row._id);
+        removed++;
+      }
+    }
+    return removed;
   },
 });
 

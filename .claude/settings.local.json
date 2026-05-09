@@ -23,7 +23,9 @@
       "Read(//c/Users/mdani/.convex//**)",
       "Bash(npx convex *)",
       "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' https://ring0-worker.mdanishboy.workers.dev/health)",
-      "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' -X POST https://ring0-worker.mdanishboy.workers.dev/twilio/incoming -d 'CallSid=CA-debug&From=%2B6500000000&To=%2B1000')"
+      "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' -X POST https://ring0-worker.mdanishboy.workers.dev/twilio/incoming -d 'CallSid=CA-debug&From=%2B6500000000&To=%2B1000')",
+      "Bash(npm --workspace dashboard run typecheck)",
+      "WebFetch(domain:developers.openai.com)"
     ]
   }
 }

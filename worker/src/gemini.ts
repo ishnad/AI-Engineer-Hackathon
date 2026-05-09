@@ -11,6 +11,9 @@ export interface GeminiLiveOptions {
   endpoint?: string;
   onAudio: (pcm16k: ArrayBuffer) => void;
   onTranscript: (text: string, role: "user" | "agent") => void;
+  // Fires when Gemini's VAD detects the caller barging in. The session
+  // should drop any audio buffered downstream (e.g. Twilio's media queue).
+  onInterrupted?: () => void;
   onClose: () => void;
 }
 
@@ -112,6 +115,10 @@ export class GeminiLive {
       this.pendingAudio = [];
       for (const buf of drained) this.sendAudio(buf);
       return;
+    }
+
+    if (msg?.serverContent?.interrupted) {
+      this.opts.onInterrupted?.();
     }
 
     const userText = msg?.serverContent?.inputTranscription?.text;

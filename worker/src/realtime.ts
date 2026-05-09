@@ -12,6 +12,9 @@ export interface RealtimeOptions {
   endpoint?: string;
   onAudio: (pcm24k: ArrayBuffer) => void;
   onTranscript: (text: string, role: "user" | "agent") => void;
+  // Fires when server VAD detects the caller starting to speak so the
+  // session can flush any audio still buffered at Twilio.
+  onInterrupted?: () => void;
   onClose: () => void;
 }
 
@@ -76,6 +79,9 @@ export class OpenAIRealtime {
     if (!msg) return;
 
     switch (msg.type) {
+      case "input_audio_buffer.speech_started":
+        this.opts.onInterrupted?.();
+        break;
       case "response.audio.delta":
         if (typeof msg.delta === "string") {
           const bytes = base64ToBytes(msg.delta);

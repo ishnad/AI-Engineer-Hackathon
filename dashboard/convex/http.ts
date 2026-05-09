@@ -24,6 +24,22 @@ http.route({
 });
 
 http.route({
+  path: "/ring0/call/transcript",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = (await request.json()) as {
+      callSid: string;
+      transcript: { role: "user" | "agent"; text: string; t: number }[];
+    };
+    await ctx.runMutation(api.calls.appendTranscript, {
+      callSid: body.callSid,
+      transcript: JSON.stringify(body.transcript),
+    });
+    return new Response("ok");
+  }),
+});
+
+http.route({
   path: "/ring0/call/ended",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
