@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
+import { CallTranscriptScene, type TranscriptSceneLine } from "./CallTranscriptScene";
 
 interface Turn {
   role: "user" | "agent";
@@ -48,8 +49,8 @@ export function LiveTranscripts() {
   };
 
   return (
-    <section style={{ marginTop: "3rem" }}>
-      <header style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "1rem", gap: "1rem", flexWrap: "wrap" }}>
+    <section className="dashboard-section">
+      <header className="section-heading">
         <h2 style={{ margin: 0 }}>Live transcripts</h2>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {bulkMsg ? <span style={{ opacity: 0.7, fontSize: "0.8rem" }}>{bulkMsg}</span> : null}
@@ -71,19 +72,15 @@ export function LiveTranscripts() {
           </button>
         </div>
       </header>
-      <div style={{ display: "grid", gap: "1rem" }}>
+      <CallTranscriptScene lines={sceneLinesFromTranscript(calls[0]?.transcript)} />
+      <div className="transcript-list">
         {calls.map((c) => {
           const busy = !!removing[c._id];
           return (
             <article
               key={c._id}
-              style={{
-                padding: "1rem",
-                border: "1px solid #222",
-                borderRadius: 8,
-                opacity: busy ? 0.5 : 1,
-                transition: "opacity 0.2s",
-              }}
+              className="transcript-card"
+              style={{ opacity: busy ? 0.5 : 1 }}
             >
               <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6, fontSize: "0.85rem", gap: "1rem" }}>
                 <span>{c.personaId} · {c.scamCategory ?? "classifying…"}</span>
@@ -154,11 +151,29 @@ function renderTurns(raw: string | undefined): string {
   }
 }
 
+function sceneLinesFromTranscript(raw: string | undefined): TranscriptSceneLine[] {
+  if (!raw) return [];
+  try {
+    const turns = JSON.parse(raw) as Turn[];
+    return turns
+      .map((turn) => ({
+        side: turn.role === "agent" ? "ring0" : "caller",
+        label: turn.role === "agent" ? "Ring0" : "Caller",
+        text: turn.text.trim(),
+      }) satisfies TranscriptSceneLine)
+      .filter((line) => line.text.length > 0)
+      .slice(-6);
+  } catch {
+    const text = raw.trim();
+    return text ? [{ side: "caller", label: "Caller", text }] : [];
+  }
+}
+
 function Skeleton() {
   return (
     <section style={{ marginTop: "3rem" }}>
       <h2>Live transcripts</h2>
-      <p style={{ opacity: 0.6 }}>Loading…</p>
+      <CallTranscriptScene loading />
     </section>
   );
 }

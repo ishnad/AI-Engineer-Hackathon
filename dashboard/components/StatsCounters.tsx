@@ -9,14 +9,7 @@ export function StatsCounters() {
   const sigs = useQuery(api.signatures.leaderboard, { limit: 100 });
 
   return (
-    <section
-      style={{
-        marginTop: "3rem",
-        display: "grid",
-        gap: "1rem",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      }}
-    >
+    <section className="stats-grid">
       <Stat label="Scammer-minutes wasted" value={fmt(stats?.totalScammerMinutes)} />
       <Stat label="Calls intercepted" value={String(stats?.totalCalls ?? "—")} />
       <Stat label="Active personas" value={String(personas?.length ?? "—")} />
@@ -35,9 +28,9 @@ function fmtMs(samples: number[] | undefined): string {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ padding: "1.25rem", border: "1px solid #222", borderRadius: 8 }}>
-      <div style={{ fontSize: "2rem", fontWeight: 600 }}>{value}</div>
-      <div style={{ opacity: 0.6, fontSize: "0.9rem" }}>{label}</div>
+    <div className="stat-card">
+      <div className="stat-card__value">{value}</div>
+      <div className="stat-card__label">{label}</div>
     </div>
   );
 }
