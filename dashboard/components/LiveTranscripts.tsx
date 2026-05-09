@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
-import { CallTranscriptScene, type TranscriptSceneLine } from "./CallTranscriptScene";
 
 interface Turn {
   role: "user" | "agent";
@@ -72,7 +71,6 @@ export function LiveTranscripts() {
           </button>
         </div>
       </header>
-      <CallTranscriptScene lines={sceneLinesFromTranscript(calls[0]?.transcript)} />
       <div className="transcript-list">
         {calls.map((c) => {
           const busy = !!removing[c._id];
@@ -151,29 +149,11 @@ function renderTurns(raw: string | undefined): string {
   }
 }
 
-function sceneLinesFromTranscript(raw: string | undefined): TranscriptSceneLine[] {
-  if (!raw) return [];
-  try {
-    const turns = JSON.parse(raw) as Turn[];
-    return turns
-      .map((turn) => ({
-        side: turn.role === "agent" ? "ring0" : "caller",
-        label: turn.role === "agent" ? "Ring0" : "Caller",
-        text: turn.text.trim(),
-      }) satisfies TranscriptSceneLine)
-      .filter((line) => line.text.length > 0)
-      .slice(-6);
-  } catch {
-    const text = raw.trim();
-    return text ? [{ side: "caller", label: "Caller", text }] : [];
-  }
-}
-
 function Skeleton() {
   return (
     <section style={{ marginTop: "3rem" }}>
       <h2>Live transcripts</h2>
-      <CallTranscriptScene loading />
+      <p style={{ opacity: 0.6 }}>Loading…</p>
     </section>
   );
 }
