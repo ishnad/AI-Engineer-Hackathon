@@ -25,7 +25,8 @@
       "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' https://ring0-worker.mdanishboy.workers.dev/health)",
       "Bash(curl -s -o - -w '\\\\nHTTP %{http_code}\\\\n' -X POST https://ring0-worker.mdanishboy.workers.dev/twilio/incoming -d 'CallSid=CA-debug&From=%2B6500000000&To=%2B1000')",
       "Bash(npm --workspace dashboard run typecheck)",
-      "WebFetch(domain:developers.openai.com)"
+      "WebFetch(domain:developers.openai.com)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://dynamic-tiger-894.convex.cloud/ring0/call/transcript\" -Method POST -ContentType \"application/json\" -Body '{\"callSid\":\"healthcheck\",\"transcript\":[]}' -UseBasicParsing; Write-Output \"status=$\\($r.StatusCode\\) body=$\\($r.Content\\)\" } catch { Write-Output \"err=$\\($_.Exception.Message\\)\"; if \\($_.Exception.Response\\) { Write-Output \"resp_status=$\\([int]$_.Exception.Response.StatusCode\\)\" } })"
     ]
   }
 }
